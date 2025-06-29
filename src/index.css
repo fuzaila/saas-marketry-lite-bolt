@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent;
+  }
+  
+  .gradient-bg {
+    @apply bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50;
+  }
+  
+  .dark .gradient-bg {
+    @apply bg-gradient-to-br from-gray-900 via-purple-900/20 to-pink-900/20;
+  }
+}
