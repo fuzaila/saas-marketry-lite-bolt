@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Download, Copy, Check } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 export const MarketingPlanDisplay: React.FC = () => {
   const { isDarkMode, marketingPlan, clearMarketingPlan } = useAppStore();
