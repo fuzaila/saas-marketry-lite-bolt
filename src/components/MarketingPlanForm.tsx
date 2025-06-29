@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
+import { GeminiService } from '../services/geminiService';
 
 export const MarketingPlanForm: React.FC = () => {
   const { isDarkMode, formData, updateFormData, setMarketingPlan, incrementUsage, usageCount } = useAppStore();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,176 +17,19 @@ export const MarketingPlanForm: React.FC = () => {
     }
 
     setIsGenerating(true);
+    setError(null);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    const mockPlan = generateMockMarketingPlan(formData);
-    setMarketingPlan(mockPlan);
-    incrementUsage();
-    setIsGenerating(false);
-  };
-
-  const generateMockMarketingPlan = (data: typeof formData) => {
-    return `# 7-Day Marketing Plan for ${data.productName}
-
-## Executive Summary
-This comprehensive marketing plan is designed to help ${data.productName} acquire its first 100 users within 7 days through targeted strategies and focused execution.
-
-## Product Overview
-**Product:** ${data.productName}
-**Description:** ${data.productDescription}
-**Target Audience:** ${data.targetAudience}
-**Budget:** ${data.budget}
-**Primary Goals:** ${data.goals}
-
-## Day-by-Day Action Plan
-
-### Day 1: Foundation & Setup
-**Objective:** Establish your marketing foundation
-
-**Tasks:**
-• Set up Google Analytics and tracking pixels
-• Create social media profiles (Twitter, LinkedIn, Product Hunt)
-• Prepare launch assets (screenshots, demo videos, press kit)
-• Write your elevator pitch and key messaging
-• Set up email capture system
-
-**Expected Outcome:** Marketing infrastructure ready for launch
-
-### Day 2: Content Creation & SEO
-**Objective:** Create valuable content to attract your target audience
-
-**Tasks:**
-• Write 3 blog posts addressing your target audience's pain points
-• Create a landing page optimized for conversions
-• Set up basic SEO (meta tags, keywords, sitemap)
-• Prepare social media content calendar
-• Create a product demo video
-
-**Expected Outcome:** Content foundation established for organic discovery
-
-### Day 3: Community Engagement
-**Objective:** Build relationships in relevant communities
-
-**Tasks:**
-• Join 5-10 relevant online communities (Reddit, Discord, Slack groups)
-• Engage authentically in discussions (don't pitch immediately)
-• Share valuable insights and help solve problems
-• Connect with potential users on LinkedIn
-• Participate in relevant Twitter conversations
-
-**Expected Outcome:** 50+ meaningful community interactions
-
-### Day 4: Product Hunt & Launch Preparation
-**Objective:** Prepare for major launch platforms
-
-**Tasks:**
-• Submit to Product Hunt (schedule for optimal day)
-• Reach out to your network for launch day support
-• Prepare launch day social media posts
-• Create email announcement for your list
-• Set up launch day tracking and monitoring
-
-**Expected Outcome:** Launch strategy ready for execution
-
-### Day 5: Launch Day Execution
-**Objective:** Execute your launch and maximize visibility
-
-**Tasks:**
-• Go live on Product Hunt at 12:01 AM PST
-• Send launch announcement to your email list
-• Post on all social media channels
-• Engage with Product Hunt comments throughout the day
-• Reach out to press and bloggers with your story
-
-**Expected Outcome:** 200+ Product Hunt votes, 25+ new users
-
-### Day 6: Influencer & Partnership Outreach
-**Objective:** Leverage relationships for growth
-
-**Tasks:**
-• Identify 20 micro-influencers in your niche
-• Craft personalized outreach messages
-• Offer free access in exchange for honest reviews
-• Reach out to complementary SaaS tools for partnerships
-• Connect with industry newsletters for features
-
-**Expected Outcome:** 5+ influencer partnerships, 2+ newsletter features
-
-### Day 7: Optimization & Follow-up
-**Objective:** Optimize based on data and maintain momentum
-
-**Tasks:**
-• Analyze week's performance data
-• A/B test your landing page elements
-• Follow up with warm leads from the week
-• Plan next week's content and outreach
-• Celebrate your wins and document lessons learned
-
-**Expected Outcome:** 15+ additional users, clear optimization plan
-
-## Key Metrics to Track
-
-### Primary Metrics:
-• **User Signups:** Target 100 users by end of week
-• **Conversion Rate:** Landing page visitors to signups
-• **Traffic Sources:** Which channels drive the most quality traffic
-• **Engagement Rate:** How users interact with your product
-
-### Secondary Metrics:
-• Social media followers and engagement
-• Email list growth
-• Product Hunt ranking and votes
-• Press mentions and backlinks
-
-## Budget Allocation (Based on ${data.budget})
-
-### Recommended Spend:
-• **Paid Ads:** 40% - Focus on high-intent keywords
-• **Tools & Software:** 25% - Analytics, email marketing, design tools
-• **Content Creation:** 20% - Video editing, graphics, copywriting
-• **Influencer Partnerships:** 15% - Micro-influencer collaborations
-
-## Success Factors
-
-### Critical Success Factors:
-1. **Consistent Execution:** Follow the daily plan without skipping steps
-2. **Authentic Engagement:** Focus on building real relationships, not just pitching
-3. **Data-Driven Decisions:** Track everything and optimize based on results
-4. **Quality Over Quantity:** Better to have 50 engaged users than 200 inactive ones
-
-### Common Pitfalls to Avoid:
-• Trying to be everywhere at once
-• Focusing only on vanity metrics
-• Not following up with interested prospects
-• Giving up after day 3 if results aren't immediate
-
-## Next Steps After Week 1
-
-### Week 2 Focus Areas:
-• Double down on the channels that worked best
-• Implement user feedback and iterate on your product
-• Start building a content marketing engine
-• Develop a referral program for existing users
-
-### Long-term Strategy:
-• Build a sustainable content marketing system
-• Develop strategic partnerships
-• Implement a comprehensive email marketing funnel
-• Scale the tactics that proved most effective
-
-## Conclusion
-
-This 7-day plan is designed to give ${data.productName} maximum visibility and user acquisition in a short timeframe. Success depends on consistent execution, authentic engagement, and rapid iteration based on data.
-
-Remember: The goal isn't just to get 100 users, but to get 100 users who love your product and will become advocates for your brand.
-
-**Ready to launch? Let's make it happen! 🚀**
-
----
-
-*Generated by SaaSMarketry Lite - Your AI Marketing Strategist*`;
+    try {
+      const geminiService = new GeminiService();
+      const marketingPlan = await geminiService.generateMarketingPlan(formData);
+      setMarketingPlan(marketingPlan);
+      incrementUsage();
+    } catch (err) {
+      console.error('Error generating marketing plan:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate marketing plan. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const isDisabled = usageCount >= 2;
@@ -202,6 +47,16 @@ Remember: The goal isn't just to get 100 users, but to get 100 users who love yo
             ? 'bg-gray-800/50 border-gray-700'
             : 'bg-white/50 border-gray-200'
         }`}>
+          {error && (
+            <div className={`mb-6 p-4 rounded-xl border ${
+              isDarkMode
+                ? 'bg-red-900/20 border-red-800 text-red-300'
+                : 'bg-red-50 border-red-200 text-red-700'
+            }`}>
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
+
           <div className="space-y-6">
             <div>
               <label className={`block text-sm font-medium mb-2 ${
