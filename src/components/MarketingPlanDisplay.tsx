@@ -29,56 +29,90 @@ export const MarketingPlanDisplay: React.FC = () => {
       const margin = 20;
       const maxWidth = pageWidth - (margin * 2);
       
-      // Add title
-      pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('7-Day Marketing Plan', margin, margin + 10);
-      
-      // Add content
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      
-      // Split the marketing plan into lines and format
+      // Split the marketing plan into lines
       const lines = marketingPlan.split('\n');
-      let yPosition = margin + 25;
+      let yPosition = margin;
       
       for (const line of lines) {
-        if (yPosition > pageHeight - margin) {
+        // Check if we need a new page
+        if (yPosition > pageHeight - margin - 10) {
           pdf.addPage();
           yPosition = margin;
         }
         
-        if (line.startsWith('#')) {
-          // Header
+        const trimmedLine = line.trim();
+        
+        if (trimmedLine.startsWith('# ')) {
+          // Main header (H1)
           pdf.setFont('helvetica', 'bold');
-          pdf.setFontSize(line.startsWith('##') ? 12 : 14);
-          const headerText = line.replace(/^#+\s*/, '');
-          pdf.text(headerText, margin, yPosition);
-          yPosition += 8;
-        } else if (line.startsWith('•') || line.startsWith('*')) {
-          // Bullet point
+          pdf.setFontSize(18);
+          const headerText = trimmedLine.replace(/^#\s*/, '');
+          const splitText = pdf.splitTextToSize(headerText, maxWidth);
+          pdf.text(splitText, margin, yPosition);
+          yPosition += splitText.length * 8 + 5;
+        } else if (trimmedLine.startsWith('## ')) {
+          // Section header (H2)
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(14);
+          const headerText = trimmedLine.replace(/^##\s*/, '');
+          const splitText = pdf.splitTextToSize(headerText, maxWidth);
+          pdf.text(splitText, margin, yPosition);
+          yPosition += splitText.length * 6 + 4;
+        } else if (trimmedLine.startsWith('### ')) {
+          // Subsection header (H3)
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(12);
+          const headerText = trimmedLine.replace(/^###\s*/, '');
+          const splitText = pdf.splitTextToSize(headerText, maxWidth);
+          pdf.text(splitText, margin, yPosition);
+          yPosition += splitText.length * 5 + 3;
+        } else if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+          // Bold text
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(10);
+          const boldText = trimmedLine.replace(/\*\*/g, '');
+          const splitText = pdf.splitTextToSize(boldText, maxWidth);
+          pdf.text(splitText, margin, yPosition);
+          yPosition += splitText.length * 4 + 2;
+        } else if (trimmedLine.startsWith('• ') || trimmedLine.startsWith('* ') || trimmedLine.startsWith('- ')) {
+          // Bullet points
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(10);
-          const bulletText = line.replace(/^[•*]\s*/, '• ');
-          const splitText = pdf.splitTextToSize(bulletText, maxWidth - 10);
-          pdf.text(splitText, margin + 5, yPosition);
-          yPosition += splitText.length * 4;
-        } else if (line.trim()) {
+          const bulletText = '• ' + trimmedLine.replace(/^[•*-]\s*/, '');
+          const splitText = pdf.splitTextToSize(bulletText, maxWidth - 5);
+          pdf.text(splitText, margin + 3, yPosition);
+          yPosition += splitText.length * 4 + 1;
+        } else if (trimmedLine.match(/^\d+\.\s/)) {
+          // Numbered lists
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(10);
+          const splitText = pdf.splitTextToSize(trimmedLine, maxWidth - 5);
+          pdf.text(splitText, margin + 3, yPosition);
+          yPosition += splitText.length * 4 + 1;
+        } else if (trimmedLine.startsWith('---')) {
+          // Horizontal rule
+          pdf.setDrawColor(200, 200, 200);
+          pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+          yPosition += 6;
+        } else if (trimmedLine.length > 0) {
           // Regular text
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(10);
-          const splitText = pdf.splitTextToSize(line, maxWidth);
+          const splitText = pdf.splitTextToSize(trimmedLine, maxWidth);
           pdf.text(splitText, margin, yPosition);
-          yPosition += splitText.length * 4;
+          yPosition += splitText.length * 4 + 2;
         } else {
-          // Empty line
-          yPosition += 4;
+          // Empty line - add small space
+          yPosition += 3;
         }
       }
       
-      pdf.save('marketing-plan.pdf');
+      // Save the PDF with a descriptive filename
+      const timestamp = new Date().toISOString().split('T')[0];
+      pdf.save(`marketing-plan-${timestamp}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
     } finally {
       setIsDownloading(false);
     }
@@ -124,12 +158,12 @@ export const MarketingPlanDisplay: React.FC = () => {
             </p>
           );
         }
-        if (line.startsWith('• ') || line.startsWith('* ')) {
+        if (line.startsWith('• ') || line.startsWith('* ') || line.startsWith('- ')) {
           return (
             <li key={index} className={`mb-1 ml-4 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-600'
             }`}>
-              {line.replace(/^[•*] /, '')}
+              {line.replace(/^[•*-] /, '')}
             </li>
           );
         }
